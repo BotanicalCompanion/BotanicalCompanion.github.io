@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Botanical Companion - パーソナル・アロマダイアログ</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s ease-out forwards',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(8px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(16px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* スクロールバーの非表示カスタマイズ */
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-start justify-center md:py-6">
+
+  <!-- メインコンテナ -->
+  <div class="w-full max-w-md min-h-screen md:min-h-[85vh] flex flex-col bg-slate-50 md:rounded-3xl overflow-hidden shadow-2xl border border-emerald-100/30 font-sans relative">
+    
+    <!-- ボタニカル・ヘッダー -->
+    <header class="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white p-4 text-center shadow-lg shrink-0 relative z-20">
+      <div class="absolute top-3.5 left-4 text-emerald-300 text-2xl animate-pulse-slow">🌿</div>
+      <div class="absolute top-4 right-4 text-emerald-200/60 text-[10px] font-semibold flex items-center gap-1">
+        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span>
+        Assistant Online
+      </div>
+      <h1 class="text-xl font-extrabold tracking-wider flex items-center justify-center gap-1">
+        <span>Botanical Companion</span>
+      </h1>
+      <p class="text-[11px] text-emerald-100/90 mt-0.5 tracking-wide font-medium">
+        心と身体に優しく寄り添うパーソナル・アロマダイアログ
+      </p>
+    </header>
+
+    <!-- タブナビゲーション -->
+    <div class="sticky top-0 flex bg-white border-b border-slate-100 text-sm font-medium shrink-0 shadow-sm z-30">
+      <button
+        id="tab-diagnose"
+        onclick="switchTab('diagnose')"
+        class="flex-1 py-3 text-center transition-all border-b-2 flex items-center justify-center gap-1.5 border-emerald-600 text-emerald-800 font-bold bg-emerald-50/20"
+      >
+        <span class="text-base">🔮</span> アシスタントと対話
+      </button>
+      <button
+        id="tab-library"
+        onclick="switchTab('library')"
+        class="flex-1 py-3 text-center transition-all border-b-2 flex items-center justify-center gap-1.5 border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/50"
+      >
+        <span class="text-base">📖</span> アロマ図鑑
+      </button>
+      <button
+        id="tab-favorites"
+        onclick="switchTab('favorites')"
+        class="flex-1 py-3 text-center transition-all border-b-2 flex items-center justify-center gap-1.5 border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/50 relative"
+      >
+        <span class="text-base">💚</span> お気に入り
+        <span id="fav-badge" class="hidden absolute top-2 right-3 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-sm animate-bounce">0</span>
+      </button>
+    </div>
+
+    <!-- メイン表示エリア (スクロールコンテナにIDを設定) -->
+    <div id="chat-scroll-container" class="flex-1 bg-slate-50/40 p-4 flex flex-col justify-between relative z-0 overflow-y-auto">
+      
+      <!-- ===================== Tab 1: 対話チャット画面 ===================== -->
+      <div id="content-diagnose" class="flex flex-col flex-1 justify-between gap-4">
+        <!-- チャットログ -->
+        <div id="chat-history" class="space-y-4 flex-1">
+          <!-- JSで動的に追加されます -->
+        </div>
+
+        <!-- アクション操作パネル -->
+        <div id="action-panel" class="pt-2 mt-auto space-y-3 shrink-0">
+          <!-- 選択肢ボタン群がここに描画されます -->
+        </div>
+      </div>
+
+      <!-- ===================== Tab 2: アロマ図鑑画面 ===================== -->
+      <div id="content-library" class="hidden space-y-4">
+        <!-- フィルターエリア -->
+        <div id="library-filter-bar" class="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none shrink-0">
+          <!-- JSでカテゴリボタンが挿入されます -->
+        </div>
+        <!-- 図鑑リスト -->
+        <div id="library-list" class="grid grid-cols-1 gap-3 pb-6">
+          <!-- JSでアロマ一覧が描画されます -->
+        </div>
+      </div>
+
+      <!-- ===================== Tab 3: お気に入り画面 ===================== -->
+      <div id="content-favorites" class="hidden space-y-4 flex flex-col justify-between">
+        <div id="favorites-list" class="grid grid-cols-1 gap-3 pb-6 flex-1">
+          <!-- JSでお気に入り一覧、または空メッセージが描画されます -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- フッター -->
+    <footer class="bg-slate-100 border-t border-slate-200/50 p-3 text-center shrink-0">
+      <p class="text-[10px] text-slate-400 font-medium tracking-wider">
+        © Botanical Companion | Designed with Care 🌿
+      </p>
+    </footer>
+
+  </div>
+
+  <script>
+    // --- データ定義 ---
+    const AROMA_DATA = {
+      lavender: {
+        name: 'ラベンダー',
+        english: 'Lavender',
+        category: 'フローラル系',
+        trouble: '日々のタスクや仕事のプレッシャー、焦り',
+        wantToBe: '張り詰めた心を落ち着かせてリラックスしたい',
+        desc: '心身をリラックスさせ、不安を和らげます。就寝前や大切な本番前に効果的です。',
+        reference: '就寝前のベッドサイドでの芳香浴や、緊張する本番前にハンカチに1滴垂らして使うのがおすすめです。',
+        properties: ['プレッシャー緩和', '深い睡眠', '安心感'],
+        color: 'from-purple-500 via-indigo-500 to-purple-600',
+        emoji: '🪻',
+        scenes: ['スマホを置いて眠りにつく前の30分', '大切な発表を控えた移動時間', '一日の終わり、お風呂上がりの休息タイム'],
+        imageUrl: 'https://images.unsplash.com/photo-1528183429752-a97d0bf99b5a?auto=format&fit=crop&w=600&q=80'
+      },
+      bergamot: {
+        name: 'ベルガモット',
+        english: 'Bergamot',
+        category: 'シトラス系',
+        trouble: '対人関係の気疲れ、SNSのノイズ、気分の塞ぎ込み',
+        wantToBe: 'もやもやを解消し、気持ちを前向きに切り替えたい',
+        desc: 'ストレスを和らげ、気持ちを前向きにします。※光毒性がありますので、日光を浴びる直前の使用はお控えください。',
+        reference: 'アールグレイの香り付けにも使われる、フルーティーで気品ある柑橘。夕方や夜のリフレッシュタイムに特におすすめ。',
+        properties: ['気持ちの安定', '気分転換', '光毒性注意⚠️'],
+        color: 'from-amber-400 via-emerald-500 to-teal-600',
+        emoji: '🍊',
+        scenes: ['夕方に仕事や作業が一区切りついたとき', 'SNSを見すぎて少し疲れたとき', '人と会う前のマインドリフレッシュに'],
+        imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80'
+      },
+      peppermint: {
+        name: 'ペパーミント',
+        english: 'Peppermint',
+        category: 'ミント系',
+        trouble: '長時間の作業やデスクワークによる集中力低下・眠気',
+        wantToBe: '眠気を吹き飛ばして、頭をシャキッとクリアにしたい',
+        desc: 'メントールの清涼感が眠気を覚まし、頭を瞬時に活性化・集中力を高めます。※肌刺激にご注意ください。',
+        reference: '仕事中や深夜のデスクワークの強い味方。ティッシュに含ませて香りを吸い込むだけで気分がリセットされます。',
+        properties: ['仕事・勉強のお供', '眠気撃退', '集中力UP'],
+        color: 'from-cyan-400 via-teal-400 to-blue-500',
+        emoji: '🌿',
+        scenes: ['仕事をスタートする直前', '会議や運転前の眠気覚ましに', '溜まったタスクを片付け始めるとき'],
+        imageUrl: 'https://images.unsplash.com/photo-1627483262769-04d0a1401487?auto=format&fit=crop&w=600&q=80'
+      },
+      lemongrass: {
+        name: 'レモングラス',
+        english: 'Lemongrass',
+        category: 'ハーブ系',
+        trouble: '立ち仕事や外出、繰り返しの家事による身体的な疲労感',
+        wantToBe: '重だだるい身体をリセットし、元気を取り戻したい',
+        desc: 'レモンのような爽やかな酸味を帯びたハーブ香が、身体をリフレッシュさせ、重だるさを吹き飛ばします。',
+        reference: '立ち仕事の後、スポーツの後、なんだか疲れが取れない朝にディフューズすると活力のスイッチが入ります。',
+        properties: ['疲労回復', '活力を出す', '爽快な空気'],
+        color: 'from-yellow-400 via-lime-500 to-emerald-500',
+        emoji: '🍋',
+        scenes: ['身体をたくさん動かした後のシャワー', '残業が終わって帰宅した夜', '疲れが残っていて身体が重いと感じる朝'],
+        imageUrl: 'https://images.unsplash.com/photo-1515002246390-7bf7e8f87b54?auto=format&fit=crop&w=600&q=80'
+      },
+      lemon: {
+        name: 'レモン',
+        english: 'Lemon',
+        category: 'シトラス系',
+        trouble: '朝どんよりして起きられない、午前中の気分を切り替えたい',
+        wantToBe: '頭の中を爽快に切り替えて、すっきりと一日を始めたい',
+        desc: 'もぎたてのように爽やかな香りで脳を刺激し、頭の中を爽快に切り替えてシャキッと目覚めさせます。※光毒性あり。',
+        reference: '朝のスタートアップに最適。部屋の空気をフレッシュにして新しい一日を気持ちよく迎えましょう。',
+        properties: ['朝のスッキリ', '気分の切り替え', '光毒性注意⚠️'],
+        color: 'from-yellow-300 via-amber-400 to-yellow-500',
+        emoji: '🍋',
+        scenes: ['アラームが鳴った直後の換気時に', '一日のスケジュールを確認する朝の時間', '頭がボーッとする休日の昼下がり'],
+        imageUrl: 'https://images.unsplash.com/photo-1590502593747-42a996133562?auto=format&fit=crop&w=600&q=80'
+      },
+      geranium: {
+        name: 'ゼラニウム',
+        english: 'Geranium',
+        category: 'フローラル系',
+        trouble: '対人関係のストレス、感情の揺らぎやリズムの乱れ',
+        wantToBe: 'イライラや落ち込みを和らげて、心を安定させたい',
+        desc: 'バラのような甘さと清涼感を含み、イライラや気分の浮き沈みを整え穏やかで安定した心を育てます。',
+        reference: '自律神経の不調を感じたときや、自分のためのご褒美マッサージ、一日の終わり、心をフラットに戻したい瞬間に最適。',
+        properties: ['自律神経の乱れに', '情緒の安定', 'バランス調整'],
+        color: 'from-fuchsia-400 via-rose-400 to-pink-500',
+        emoji: '🌸',
+        scenes: ['なんとなく心が落ち着かない夕暮れ時', '一人暮らしの部屋で少し寂しさを感じたとき', 'お風呂の中でセルフマッサージをするお供に'],
+        imageUrl: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=600&q=80'
+      },
+      clarysage: {
+        name: 'クラリセージ',
+        english: 'Clary Sage',
+        category: 'ハーブ系',
+        trouble: '周期的な心身の不調や、それに伴う極端な情緒不安定',
+        wantToBe: 'リズムの乱れを温かく労り、穏やかで安心できる時間を過ごしたい',
+        desc: 'スパイシーかつハーバルな温かい香りが、周期的な女性ならではの心身のゆらぎや重さを温かく包み込みます。',
+        reference: 'イライラして自分を責めそうなとき、温かいハーブティーとともにゆったり芳香浴をするのがおすすめです。※妊娠中は使用を避けてください。',
+        properties: ['周期的な不調に', '深い安心感', 'お腹の重さに'],
+        color: 'from-teal-400 via-indigo-500 to-emerald-600',
+        emoji: '🌱',
+        scenes: ['どうしても気分や体調が乗らない日の夜', '温かい飲み物を飲みながら過ごす時間', 'ヨガやストレッチで身体をほぐすとき'],
+        imageUrl: 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=600&q=80'
+      },
+      teatree: {
+        name: 'ティーツリー',
+        english: 'Tea Tree',
+        category: 'ウッディ・ハーブ系',
+        trouble: '部屋や仕事場の空気がこもっている、マルチタスクによる頭のキャパオーバー',
+        wantToBe: '空間を一気にリセットし、思考をスッキリクリアにさせたい',
+        desc: '非常にシャープでクリーンな香りで、淀んだ空間や、マルチタスクでパンクしそうな思考を一瞬でクリーンに初期化します。',
+        reference: 'お部屋の掃除やデスク周辺 of 消臭スプレーとしても大活躍。頭をクールダウンさせ冷静さを取り戻します。',
+        properties: ['脳内デトックス', '空間の空気清浄', '清潔な生活'],
+        color: 'from-green-400 via-emerald-500 to-teal-600',
+        emoji: '🧴',
+        scenes: ['部屋や仕事用のデスクまわりを掃除するとき', '何時間もパソコンと向き合った後のリフレッシュに', '帰宅直後のルームスプレーに'],
+        imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80'
+      },
+      eucalyptus: {
+        name: 'ユーカリ',
+        english: 'Eucalyptus',
+        category: 'ウッド系',
+        trouble: 'エアコンによる乾燥、のどや鼻のムズムズ、息苦しさや浅い呼吸',
+        wantToBe: 'のどの通りをスッキリさせて、気持ちの良い深呼吸をしたい',
+        desc: 'スーッとする鋭い香りがのどや鼻をすっきりと通過させ、窮屈な身体に大きな深呼吸を取り戻してくれます。',
+        reference: '乾燥や花粉で空気が不快なときにおすすめ。お風呂の床の隅に数滴落として、温かい蒸気と楽しむのも至高です。',
+        properties: ['呼吸スッキリ', '花粉・エアコン対策', '空気の入れ替え'],
+        color: 'from-teal-300 via-cyan-400 to-emerald-600',
+        emoji: '🐨',
+        scenes: ['冷暖房でお部屋の空気がこもっているとき', 'お風呂の床に1滴落として、温かいシャワーの蒸気とともに', 'のどや鼻をすっきりさせたい起床時'],
+        imageUrl: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=600&q=80'
+      },
+      citronella: {
+        name: 'シトロネラ',
+        english: 'Citronella',
+        category: 'シトラス-ハーブ系',
+        trouble: '嫌な生活臭、クローゼットの湿気、アウトドア時の虫除け対策',
+        wantToBe: '嫌なニオイをオフにし、さわやかで清潔な空間を整えたい',
+        desc: 'レモンに似たエネルギッシュなハーブ香が、湿気臭や生ごみ臭、嫌な生活臭などを瞬時にオフにし清潔さをキープします。',
+        reference: '天然の虫除けスプレーとして野外活動にも大人気。靴箱やクローゼット、キッチンの三角コーナーへのアプローチにも。',
+        properties: ['野外活動のお供', '天然の虫除け', '湿気・部屋の消臭'],
+        color: 'from-lime-400 via-green-500 to-emerald-600',
+        emoji: '🌾',
+        scenes: ['アウトドア活動やガーデニングを始める前', '部屋干しをしていてお部屋のニオイが気になるとき', '玄関や湿気がこもりやすい靴箱に'],
+        imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=600&q=80'
+      },
+      sandalwood: {
+        name: 'サンダルウッド',
+        english: 'Sandalwood',
+        category: 'ウッディ系',
+        trouble: '情報の見すぎで常に脳がパンク状態、雑念が多く目の前のことに没頭できない',
+        wantToBe: 'スマホを一時的に置いて、深い静寂の中で自分の本心と向き合いたい',
+        desc: '高貴な白檀（ビャくだん）の香りは、ざわざわした雑念を遠ざけ、デジタル機器から距離を置いて精神を瞑想状態へといざないます。',
+        reference: 'お香のような深いリラクゼーション。深く物事を考えたい夜や、心に確固たる一本の芯が欲しいときに最適です。',
+        properties: ['デジタルデトックス', '瞑想とマインドフルネス', '白檀 of 深い静寂'],
+        color: 'from-amber-600 via-amber-800 to-amber-950',
+        emoji: '🪵',
+        scenes: ['スマホを別の部屋に置いて本を読み始めるとき', 'ヨガやストレッチ、夜の瞑想の時間に', '静かな環境で今後のライフプランを練りたい夜'],
+        imageUrl: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=600&q=80'
+      },
+      rose: {
+        name: 'ローズ',
+        english: 'Rose',
+        category: 'フローラル系',
+        trouble: '仕事や対人関係での挫折・落ち込み、つい他人と比べてへこんでしまう',
+        wantToBe: '自分自身を最高に労い、愛して、幸福感と自信で満たしてあげたい',
+        desc: '香りの女王と呼ばれる圧倒的な華やかさが、冷え切った自尊心を優しくハグし、自己肯定感と無条件の幸福感で満たします。',
+        reference: '非常に贅沢な香油。頑張った一日の終わりの極上スキンケアやお風呂のお供など、自分自身を特別に扱いたい時に。',
+        properties: ['自己肯定感の向上', '頑張った日のご褒美', '絶対的幸福感'],
+        color: 'from-rose-400 via-pink-500 to-rose-600',
+        emoji: '🌹',
+        scenes: ['大変だった大きなタスクが一段落した夜', '自分を少し贅沢に甘やかしてあげたいお風呂上がりのケア', '大切な日の朝、自分のモチベーションを高める準備タイム'],
+        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80'
+      }
+    };
+
+    // --- 診断フロー・マスタ ---
+    const DIAGNOSE_STEPS = {
+      step1: {
+        text: `こんにちは。Botanical Companionのアロマアシスタントです🌿\n\n今のあなたの心と身体の状態に、優しく寄り添う香りをご提案します。\n現在の状態や心の調子に一番近いものを、以下から教えてくださいね。`,
+        choices: [
+          { id: 'q_stress', label: '📅 ストレスを感じる', reply: 'ストレス、たくさん抱え込んでしまっていたのですね。まずはその気持ちをお聞かせいただき、ありがとうございます。少しずつ、心が軽くなる選択をしていきましょう。' },
+          { id: 'q_anxiety', label: '🛡️ 不安や緊張がある', reply: '不安や緊張があるのですね。今とても真剣に向き合っている証拠です。緊張した糸を、優しくほどいてあげましょうね。' },
+          { id: 'q_fatigue', label: '💪 身体がクタクタ', reply: '毎日、本当にタフに頑張り抜いていらっしゃって偉いです。身体が「休みたい」とサインを出してくれていますね。' },
+          { id: 'q_motivation', label: '⚡ 集中力が出ない', reply: '「やらなきゃいけないのに、どうして…」ともどかしい気持ちになりますよね。それはエネルギーが空っぽな証拠。ご自身を責めなくて大丈夫ですよ。' },
+          { id: 'q_sleep', label: '🌙 眠りにつけない', reply: '夜が来るのが億劫になったり、布団に入っても脳が働いてしまったりするのはお辛いですね。心地よい香りで眠りの結界をつくりましょう。' }
+        ]
+      },
+      step2_data: {
+        q_stress: {
+          text: `そのストレスは、どのような場面からきているものが一番近いですか？`,
+          choices: [
+            { label: 'タスクや締め切りに追われて一息つく暇がない', aroma: 'lavender', reply: '時間に追われるプレッシャーは、自分でも気づかないうちに息を浅くさせます。脳の緊張をオフにする香りを選びました。' },
+            { label: '対人関係・家庭・職場でもやもやしている', aroma: 'bergamot', reply: '相手のあるもやもやは、頭をぐるぐる巡ってしまいますね。心の霧を前向きに晴らしてくれる香りがマッチしそうです。' },
+            { label: 'SNSを見すぎて他人の生活と自分を比べて疲れる', aroma: 'teatree', reply: '余計な情報ノイズで脳のキャパが圧迫されていますね。情報を切り、自分に戻るクリアな調香を用意します。' }
+          ]
+        },
+        q_anxiety: {
+          text: `張り詰めた不安と緊張ですね。今、どのようなことが理由になっていそうですか？`,
+          choices: [
+            { label: '仕事や環境の変化、将来への不透明さに不安がある', aroma: 'geranium', reply: '先が見えない時期は心がぐらつきやすいです。自分の内側からバランスを整え、穏やかさを取り戻す香りがおすすめです。' },
+            { label: '大切なプレゼンや発表など、緊張する本番を控えている', aroma: 'lavender', reply: '勝負のときですね！過剰にバクバクしている脈拍を落ち着かせ、いつもの実力を発揮できるような香りを添えましょう。' },
+            { label: '誰かと比べてしまって、自分に自信が持てない', aroma: 'rose', reply: '自分を認めて愛するのは時に難しいことです。女王の香りで、傷ついた自己肯定感を柔らかく包み込んであげましょう。' }
+          ]
+        },
+        q_fatigue: {
+          text: `身体が疲労を訴えているのですね。今、特にどの部分に重みを感じていますか？`,
+          choices: [
+            { label: '長時間の立ち仕事、移動、外出の繰り返しで身体が重い', aroma: 'lemongrass', reply: '活動的に身体を動かした証ですね。本当にお疲れ様です。重だるい筋肉と気持ちをスッと抜くような爽快な香りが良さそうです。' },
+            { label: '不規則な生活パターンで、リズムが崩れてなんだかだるい', aroma: 'clarysage', reply: '自律神経やバイオリズムの乱れですね。深い温かみのある香りで心身を優しく温め、正常な体内時計を応援しましょう。' },
+            { label: 'パソコンやスマホの画面を凝視しすぎて目と頭が重い', aroma: 'eucalyptus', reply: 'デジタルアイと疲労脳ですね。スーッとしたクリーンな空気を通して、脳と目の奥に新鮮な酸素を届ける香りにします。' }
+          ]
+        },
+        q_motivation: {
+          text: `ここからアロマの香りで、どのような状態に意識をチェンジさせたいですか？`,
+          choices: [
+            { label: '雑音をすべて消して目の前のタスクに没頭したい', aroma: 'peppermint', reply: '一気にゾーンに入る必要がありますね。余分な雑念を吹き飛ばし、ピントをカチッと合わせる鋭い香りが味方します。' },
+            { label: '朝早く活動したいときや、午前中の眠気をスッキリさせたい', aroma: 'lemon', reply: '朝のエンジンスタートですね！どんより曇った眠気脳を、瑞々しい柑橘の光でシャキッと覚醒させます。' },
+            { label: 'ずっと同じ部屋にこもっていて息が詰まるので雰囲気を変えたい', aroma: 'citronella', reply: '空気を綺麗に一新するような香りですね。嫌なニオイもまとめてリセットし、清潔な気分で仕事ができるようサポートします。' }
+          ]
+        },
+        q_sleep: {
+          text: `眠れない夜は焦りますね。最大の原因はどれに近そうでしょうか？`,
+          choices: [
+            { label: '今日あった出来事の反省や、明日の心配事で頭がぐるぐる動き続ける', aroma: 'lavender', reply: '考えごとのループですね。今考えなくて良いお仕事や心配事は、香りの布団に預けて強制オフにしましょう。' },
+            { label: 'デジタルによる脳の興奮。情報ノイズを落ち着かせたい', aroma: 'sandalwood', reply: '脳内がスマホ画面で過熱しています。お寺の静寂に身を置くようなウッディな香りで、強制的にノイズキャンセリングを行います。' },
+            { label: '心がざわざわして身体の芯の冷えやイライラがあり、落ち着かない', aroma: 'clarysage', reply: '身体の緊張が解けない状態です。深くゆったりと包むハーブが、硬直をリラックスに変えてスムーズな眠りへ誘います。' }
+          ]
+        }
+      },
+      step3: {
+        text: `教えてくれてありがとうございます。あなたの心身の状態、しっかりと受け止めました。とても一生煙草に過ごされているのが伝わってきます。\n\n最後に、「こうなれたら一番心が軽くなるな」と感じる理想の状態を教えてください。`,
+        choices: [
+          { id: 'calm', label: '🕊️ calm （深く穏やかに落ち着きたい）' },
+          { id: 'refresh', label: '🍃 refresh （明るく前向きに切り替えたい）' },
+          { id: 'heal', label: '💖 heal （幸福感で満たされたい）' }
+        ]
+      }
+    };
+
+    // --- 最終アロマ判定テーブル (暫定アロマ × 理想の状態) ---
+    const DECISION_MATRIX = {
+      lavender: { calm: 'lavender', refresh: 'bergamot', heal: 'rose' },
+      bergamot: { calm: 'lavender', refresh: 'bergamot', heal: 'geranium' },
+      peppermint: { calm: 'sandalwood', refresh: 'peppermint', heal: 'lemon' },
+      lemongrass: { calm: 'lavender', refresh: 'lemongrass', heal: 'rose' },
+      lemon: { calm: 'bergamot', refresh: 'lemon', heal: 'rose' },
+      geranium: { calm: 'sandalwood', refresh: 'bergamot', heal: 'geranium' },
+      clarysage: { calm: 'sandalwood', refresh: 'lemongrass', heal: 'clarysage' },
+      teatree: { calm: 'eucalyptus', refresh: 'teatree', heal: 'geranium' },
+      eucalyptus: { calm: 'sandalwood', refresh: 'eucalyptus', heal: 'lemon' },
+      citronella: { calm: 'lavender', refresh: 'citronella', heal: 'geranium' },
+      sandalwood: { calm: 'sandalwood', refresh: 'peppermint', heal: 'rose' },
+      rose: { calm: 'lavender', refresh: 'bergamot', heal: 'rose' }
+    };
+
+    // --- 状態管理 (State) ---
+    let activeTab = 'diagnose';
+    let currentStepNum = 1; // 1: 主訴, 2: 原因, 3: 理想の状態, 4: 結果表示
+    let step1SelectedId = ''; // q_stress 等
+    let provisionalAroma = ''; // ステップ2決定時の仮アロマ
+    let step3SelectedIdeal = ''; // calm 等
+    let chatHistory = [];
+    let favorites = [];
+    let isTyping = false;
+    let selectedFilterCategory = 'すべて';
+
+    // --- 起動初期化 ---
+    window.onload = () => {
+      // ローカルストレージ復元
+      const savedFavs = localStorage.getItem('botanical_companion_favs');
+      if (savedFavs) {
+        favorites = JSON.parse(savedFavs);
+      }
+      initChat();
+      renderLibrary();
+      updateFavoriteBadge();
+    };
+
+    // --- チャット初期化 ---
+    const initChat = () => {
+      chatHistory = [
+        {
+          type: 'bot',
+          speaker: 'アロマアシスタント',
+          text: `🌿 ようこそ、Botanical Companion へ。\n当対話診断は、植物の優しく豊かな香りを通して、毎日を一生懸命生きるあなたの心と身体に寄り添い、サポートするためのアロマ提案プログラムです。`
+        },
+        {
+          type: 'warn',
+          speaker: '注意事項',
+          text: `⚠️ 【ご利用にあたって】\n当診断はセルフケア、リラクゼーションを目的としたアロマの提案を行うものであり、医療行為や専門的な診断・治療行為に代わるものではありません。重度の不調がある場合は専門の医療機関を受診してください。`
+        }
+      ];
+      currentStepNum = 1;
+      step1SelectedId = '';
+      provisionalAroma = '';
+      step3SelectedIdeal = '';
+      
+      renderChat();
+      
+      // 最初のアシスタント発話を開始
+      isTyping = true;
+      renderChat();
+      setTimeout(() => {
+        isTyping = false;
+        chatHistory.push({
+          type: 'bot',
+          speaker: 'アロマアシスタント',
+          text: DIAGNOSE_STEPS.step1.text
+        });
+        renderChat();
+        renderActionPanel();
+      }, 1200);
+    };
+
+    // --- タブ切り替え ---
+    const switchTab = (tabId) => {
+      activeTab = tabId;
+      const tabs = ['diagnose', 'library', 'favorites'];
+      
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        const content = document.getElementById(`content-${t}`);
+        if (t === tabId) {
+          btn.className = "flex-1 py-3 text-center transition-all border-b-2 flex items-center justify-center gap-1.5 border-emerald-600 text-emerald-800 font-bold bg-emerald-50/20";
+          content.classList.remove('hidden');
+        } else {
+          btn.className = "flex-1 py-3 text-center transition-all border-b-2 flex items-center justify-center gap-1.5 border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/50";
+          content.classList.add('hidden');
+        }
+      });
+
+      if (tabId === 'library') {
+        renderLibrary();
+      } else if (tabId === 'favorites') {
+        renderFavorites();
+      }
+      scrollToBottom();
+    };
+
+    // --- チャット画面レンダリング ---
+    const renderChat = () => {
+      const container = document.getElementById('chat-history');
+      container.innerHTML = '';
+
+      chatHistory.forEach((msg, idx) => {
+        const isUser = msg.type === 'user';
+        const isWarn = msg.type === 'warn';
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex flex-col ${isUser ? 'items-end animate-slide-up' : 'items-start animate-fade-in'}`;
+
+        // 話し手ラベル
+        const label = document.createElement('span');
+        label.className = `text-[10px] font-bold mb-1 ${isUser ? 'pr-2 text-slate-400' : isWarn ? 'pl-2 text-amber-600' : 'pl-2 text-emerald-800 flex items-center gap-1'}`;
+        label.innerHTML = isUser ? '👤 あなた' : isWarn ? '⚠️ 注意事項' : '🍃 アロマアシスタント';
+        wrapper.appendChild(label);
+
+        // メッセージ吹き出し
+        const bubble = document.createElement('div');
+        bubble.className = `max-w-[85%] p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm transition-all whitespace-pre-line ${
+          isUser
+            ? 'bg-emerald-700 text-white rounded-tr-none shadow-emerald-700/10 font-medium'
+            : isWarn
+            ? 'bg-amber-50 text-amber-900 border border-amber-200/50 rounded-tl-none text-[11px] font-semibold'
+            : 'bg-white text-slate-800 border border-emerald-100/50 rounded-tl-none shadow-slate-100 font-medium'
+        }`;
+        bubble.textContent = msg.text;
+        wrapper.appendChild(bubble);
+
+        container.appendChild(wrapper);
+      });
+
+      // タイピングアニメーション
+      if (isTyping) {
+        const typingWrapper = document.createElement('div');
+        typingWrapper.className = `flex flex-col items-start`;
+        typingWrapper.innerHTML = `
+          <span class="text-[10px] text-emerald-800 font-bold mb-1 pl-2 flex items-center gap-1">🍃 アロマアシスタントが言葉を選んでいます...</span>
+          <div class="bg-white border border-emerald-100/50 rounded-2xl rounded-tl-none p-3 shadow-sm flex space-x-1.5 items-center">
+            <span class="block w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+            <span class="block w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+            <span class="block w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+          </div>
+        `;
+        container.appendChild(typingWrapper);
+      }
+
+      // 最終結果（ステップ4）に達していた場合、カードをここに1度だけ描画する
+      if (currentStepNum === 4 && provisionalAroma && step3SelectedIdeal) {
+        const finalAromaId = DECISION_MATRIX[provisionalAroma]?.[step3SelectedIdeal] || provisionalAroma;
+        renderResultCard(container, finalAromaId);
+      }
+
+      scrollToBottom();
+    };
+
+    // --- 最終提案カードの描画 ---
+    const renderResultCard = (container, aromaId) => {
+      const aroma = AROMA_DATA[aromaId];
+      if (!aroma) return;
+
+      const isFav = favorites.includes(aromaId);
+
+      const card = document.createElement('div');
+      card.className = "mt-4 w-full bg-white border border-emerald-100 rounded-2xl p-5 shadow-lg space-y-4 animate-slide-up";
+      card.innerHTML = `
+        <div class="p-4 rounded-xl bg-gradient-to-br ${aroma.color} text-white relative overflow-hidden shadow-inner">
+          <div class="absolute right-2 -bottom-2 text-7xl opacity-20">${aroma.emoji}</div>
+          <div class="text-[10px] font-bold uppercase tracking-widest opacity-80">${aroma.english}</div>
+          <h3 class="text-2xl font-black mt-0.5 flex items-center gap-2">
+            <span>${aroma.emoji}</span>
+            <span>${aroma.name}</span>
+          </h3>
+          <p class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full inline-block mt-2 font-semibold">
+            ${aroma.category}
+          </p>
+        </div>
+
+        <div class="relative rounded-xl overflow-hidden bg-slate-100 aspect-video group">
+          <img
+            src="${aroma.imageUrl}"
+            alt="${aroma.name}"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div class="absolute top-2 right-2">
+            <button
+              onclick="toggleFavorite('${aromaId}')"
+              id="fav-btn-result"
+              class="w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all ${
+                isFav ? 'bg-rose-500 text-white' : 'bg-white/90 text-slate-400 hover:text-rose-500 hover:scale-105'
+              }"
+            >
+              ❤️
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-3.5 text-slate-700">
+          <div>
+            <span class="text-xs text-slate-400 font-bold block mb-1">🌿 特徴</span>
+            <p class="text-xs leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 font-medium text-slate-600">${aroma.desc}</p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-2">
+            <div>
+              <span class="text-xs text-slate-400 font-bold block mb-1">📋 寄り添うお悩み</span>
+              <p class="text-xs leading-relaxed text-slate-600 bg-emerald-50/40 p-2.5 rounded border border-emerald-100/50">
+                ${aroma.trouble}
+              </p>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 font-bold block mb-1">💫 理想的な状態</span>
+              <p class="text-xs leading-relaxed text-slate-600 bg-sky-50/40 p-2.5 rounded border border-sky-100/50">
+                ${aroma.wantToBe}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-xs text-slate-400 font-bold block mb-1">🌟 期待できるアロマ効果</span>
+            <div id="result-props" class="flex flex-wrap gap-1.5 mt-1"></div>
+          </div>
+
+          <div>
+            <span class="text-xs text-slate-400 font-bold block mb-1">⏰ おすすめのシーン</span>
+            <ul id="result-scenes" class="text-xs text-slate-600 list-disc list-inside space-y-1"></ul>
+          </div>
+
+          <div class="border-t border-slate-100 pt-3">
+            <span class="text-xs text-slate-400 font-bold block mb-1">💡 アロマアシスタントからのアドバイス</span>
+            <p class="text-[11px] leading-relaxed text-slate-500 bg-slate-50 p-3 rounded-lg italic">
+              「${aroma.reference}」
+            </p>
+          </div>
+        </div>
+
+        <button
+          onclick="resetDiagnosis()"
+          class="w-full mt-2 py-3 bg-emerald-800 text-white font-bold rounded-xl shadow-md hover:bg-emerald-950 transition active:scale-[0.98] text-xs"
+        >
+          🔄 別の気分で診断する / 最初に戻る
+        </button>
+      `;
+
+      container.appendChild(card);
+
+      // 動的データの充填
+      const propsContainer = card.querySelector('#result-props');
+      aroma.properties.forEach(prop => {
+        const span = document.createElement('span');
+        span.className = "bg-emerald-50 text-emerald-800 text-[10px] px-2.5 py-1 rounded-full font-bold border border-emerald-100";
+        span.textContent = `# ${prop}`;
+        propsContainer.appendChild(span);
+      });
+
+      const scenesContainer = card.querySelector('#result-scenes');
+      aroma.scenes.forEach(scene => {
+        const li = document.createElement('li');
+        li.className = "leading-relaxed";
+        li.textContent = scene;
+        scenesContainer.appendChild(li);
+      });
+    };
+
+    // --- 操作パネル（選択肢・入力フィールドなど）の描画 ---
+    const renderActionPanel = () => {
+      const panel = document.getElementById('action-panel');
+      panel.innerHTML = '';
+
+      if (isTyping) return;
+
+      // 【ステップ1: 主訴の選択】
+      if (currentStepNum === 1) {
+        const wrapper = document.createElement('div');
+        wrapper.className = "space-y-2 animate-slide-up";
+
+        const btnGrid = document.createElement('div');
+        btnGrid.className = "grid grid-cols-1 gap-2";
+
+        const step1 = DIAGNOSE_STEPS.step1;
+        step1.choices.forEach(ch => {
+          const btn = document.createElement('button');
+          btn.className = "text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-semibold text-xs transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
+          btn.onclick = () => selectStep1(ch.id, ch.label, ch.reply);
+          btn.innerHTML = `
+            <span>${ch.label}</span>
+            <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
+          `;
+          btnGrid.appendChild(btn);
+        });
+        wrapper.appendChild(btnGrid);
+
+        // その他（自由相談フォームへ）
+        const freeBtn = document.createElement('button');
+        freeBtn.className = "w-full p-3 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/30 hover:bg-emerald-50/80 text-emerald-800 hover:text-emerald-950 font-bold text-xs transition active:scale-[0.98] shadow-sm flex items-center justify-center gap-1.5";
+        freeBtn.onclick = () => openFreeInput();
+        freeBtn.innerHTML = `<span>✍️ その他：言葉でアシスタントに直接相談する</span>`;
+        wrapper.appendChild(freeBtn);
+
+        panel.appendChild(wrapper);
+      }
+
+      // 【自由記述フォーム表示】
+      else if (currentStepNum === 'free_input') {
+        const wrapper = document.createElement('div');
+        wrapper.className = "bg-white p-4 rounded-xl border border-emerald-100 shadow-md space-y-3 animate-slide-up";
+        wrapper.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-slate-500 font-bold">📋 自由に入力して相談する</span>
+            <button onclick="cancelFreeInput()" class="text-xs text-rose-500 hover:text-rose-700 font-semibold">やめる</button>
+          </div>
+          <textarea
+            id="free-textarea"
+            placeholder="例：最近、仕事のプレッシャーがすごくて焦ってしまい、夜ベッドに入ってからも頭がぐるぐるして全く眠りにつけません。"
+            class="w-full p-3 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none h-24 text-slate-700 leading-relaxed"
+          ></textarea>
+          <button
+            onclick="submitFreeText()"
+            class="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2.5 rounded-lg text-xs font-bold transition shadow-md active:scale-95"
+          >
+            相談を送信する
+          </button>
+        `;
+        panel.appendChild(wrapper);
+      }
+
+      // 【ステップ2: 原因の深掘り】
+      else if (currentStepNum === 2) {
+        const step2Group = DIAGNOSE_STEPS.step2_data[step1SelectedId];
+        if (!step2Group) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = "space-y-2 animate-slide-up";
+
+        const btnGrid = document.createElement('div');
+        btnGrid.className = "grid grid-cols-1 gap-2";
+
+        step2Group.choices.forEach(ch => {
+          const btn = document.createElement('button');
+          btn.className = "text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-medium text-xs leading-relaxed transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
+          btn.onclick = () => selectStep2(ch.aroma, ch.label, ch.reply);
+          btn.innerHTML = `
+            <span>${ch.label}</span>
+            <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
+          `;
+          btnGrid.appendChild(btn);
+        });
+        wrapper.appendChild(btnGrid);
+
+        // 戻るボタン
+        const backBtn = document.createElement('button');
+        backBtn.className = "w-full text-center py-2 text-slate-400 hover:text-slate-600 font-semibold text-xs";
+        backBtn.onclick = () => initChat();
+        backBtn.textContent = "⬅️ 最初に戻る";
+        wrapper.appendChild(backBtn);
+
+        panel.appendChild(wrapper);
+      }
+
+      // 【ステップ3: 理想の状態】
+      else if (currentStepNum === 3) {
+        const step3 = DIAGNOSE_STEPS.step3;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = "space-y-2 animate-slide-up";
+
+        const btnGrid = document.createElement('div');
+        btnGrid.className = "grid grid-cols-1 gap-2";
+
+        step3.choices.forEach(ch => {
+          const btn = document.createElement('button');
+          btn.className = "text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-bold text-xs transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
+          btn.onclick = () => selectStep3(ch.id, ch.label);
+          btn.innerHTML = `
+            <span>${ch.label}</span>
+            <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
+          `;
+          btnGrid.appendChild(btn);
+        });
+        wrapper.appendChild(btnGrid);
+
+        panel.appendChild(wrapper);
+      }
+
+      // 【ステップ4: 診断結果表示済み】
+      else if (currentStepNum === 4) {
+        panel.innerHTML = '';
+      }
+
+      // 操作パネル描画後にスクロール位置を調整
+      scrollToBottom();
+    };
+
+    // --- 各選択アクション ---
+
+    // ステップ1：主訴
+    const selectStep1 = (chId, label, replyText) => {
+      chatHistory.push({ type: 'user', text: label });
+      step1SelectedId = chId;
+      currentStepNum = 2;
+      renderChat();
+      renderActionPanel();
+
+      isTyping = true;
+      renderChat();
+      setTimeout(() => {
+        isTyping = false;
+        chatHistory.push({
+          type: 'bot',
+          speaker: 'アロマアシスタント',
+          text: replyText + `\n\n` + DIAGNOSE_STEPS.step2_data[chId].text
+        });
+        renderChat();
+        renderActionPanel();
+      }, 1000);
+    };
+
+    // 自由記述開始
+    const openFreeInput = () => {
+      currentStepNum = 'free_input';
+      renderActionPanel();
+    };
+
+    // 自由記述キャンセル
+    const cancelFreeInput = () => {
+      currentStepNum = 1;
+      renderActionPanel();
+    };
+
+    // 自由記述送信
+    const submitFreeText = () => {
+      const textarea = document.getElementById('free-textarea');
+      const text = textarea ? textarea.value.trim() : '';
+      if (!text) return;
+
+      chatHistory.push({ type: 'user', text: text });
+      
+      let matchedAroma = 'lavender';
+      const textLower = text.toLowerCase();
+
+      if (textLower.includes('ストレス') || textLower.includes('人間関係') || textLower.includes('疲れた') || textLower.includes('sns') || textLower.includes('もやもや')) {
+        matchedAroma = 'bergamot';
+      }
+      if (textLower.includes('眠れ') || textLower.includes('寝') || textLower.includes('起き') || textLower.includes('夜')) {
+        matchedAroma = 'lavender';
+      }
+      if (textLower.includes('仕事') || textLower.includes('集中') || textLower.includes('眠気') || textLower.includes('パソコン')) {
+        matchedAroma = 'peppermint';
+      }
+      if (textLower.includes('頭') || textLower.includes('のど') || textLower.includes('エアコン') || textLower.includes('乾燥')) {
+        matchedAroma = 'eucalyptus';
+      }
+      if (textLower.includes('身体') || textLower.includes('筋肉') || textLower.includes('疲れ') || textLower.includes('重い')) {
+        matchedAroma = 'lemongrass';
+      }
+      if (textLower.includes('女性') || textLower.includes('不安定') || textLower.includes('情緒') || textLower.includes('生理')) {
+        matchedAroma = 'clarysage';
+      }
+
+      provisionalAroma = matchedAroma;
+      currentStepNum = 3;
+      renderChat();
+      renderActionPanel();
+
+      isTyping = true;
+      renderChat();
+      setTimeout(() => {
+        isTyping = false;
+        chatHistory.push({
+          type: 'bot',
+          speaker: 'アロマアシスタント',
+          text: `お話を聞かせていただき、ありがとうございます。あなたのお悩みにそっと寄り添えるよう、心の琴線に触れる香りを調香いたします。\n\n最後に、理想のイメージを教えてください。`
+        });
+        chatHistory.push({
+          type: 'bot',
+          speaker: 'アロマアシスタント',
+          text: DIAGNOSE_STEPS.step3.text
+        });
+        renderChat();
+        renderActionPanel();
+      }, 1200);
+    };
+
+    // ステップ2：原因の選択
+    const selectStep2 = (aromaId, label, replyText) => {
+      chatHistory.push({ type: 'user', text: label });
+      provisionalAroma = aromaId;
+      currentStepNum = 3;
+      renderChat();
+      renderActionPanel();
+
+      isTyping = true;
+      renderChat();
+      setTimeout(() => {
+        isTyping = false;
+        chatHistory.push({
+          type: 'bot',
+          speaker: 'アロマアシスタント',
+          text: replyText
+        });
+        chatHistory.push({
+          type: 'bot',
+          speaker: 'アロマアシスタント',
+          text: DIAGNOSE_STEPS.step3.text
+        });
+        renderChat();
+        renderActionPanel();
+      }, 1000);
+    };
+
+    // ステップ3：理想の状態の選択（これで確定）
+    const selectStep3 = (idealId, label) => {
+      chatHistory.push({ type: 'user', text: label });
+      step3SelectedIdeal = idealId;
+      currentStepNum = 4;
+      renderChat();
+      renderActionPanel();
+
+      isTyping = true;
+      renderChat();
+      setTimeout(() => {
+        isTyping = false;
+        
+        const finalAromaId = DECISION_MATRIX[provisionalAroma]?.[idealId] || provisionalAroma;
+        const aroma = AROMA_DATA[finalAromaId];
+
+        chatHistory.push({
+          type: 'bot',
+          speaker: 'アロマアシスタント',
+          text: `すべての想いを教えていただき、本当にありがとうございました。大変長らくお待たせいたしました。\n\n今のあなたに寄り添うアロマは、心の深呼吸を導く「${aroma.name}」です。あなたの歩みをそっと応援します。`
+        });
+        renderChat();
+        renderActionPanel();
+      }, 1200);
+    };
+
+    // リセット
+    const resetDiagnosis = () => {
+      initChat();
+    };
+
+    // --- アロマ図鑑（Tab 2）の描画 ---
+    const renderLibrary = () => {
+      const filterBar = document.getElementById('library-filter-bar');
+      const listContainer = document.getElementById('library-list');
+
+      const categories = ['すべて', 'フローラル系', 'シトラス系', 'ミント系', 'ハーブ系', 'ウッディ系', 'ウッド系', 'ウッディ・ハーブ系', 'シトラス-ハーブ系'];
+      filterBar.innerHTML = '';
+      
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        const isActive = selectedFilterCategory === cat;
+        btn.className = `px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+          isActive
+            ? 'bg-emerald-800 text-white shadow-sm'
+            : 'bg-white text-slate-600 hover:bg-emerald-50 border border-slate-100'
+        }`;
+        btn.textContent = cat;
+        btn.onclick = () => {
+          selectedFilterCategory = cat;
+          renderLibrary();
+        };
+        filterBar.appendChild(btn);
+      });
+
+      listContainer.innerHTML = '';
+      
+      Object.keys(AROMA_DATA).forEach(key => {
+        const aroma = AROMA_DATA[key];
+        if (selectedFilterCategory !== 'すべて' && aroma.category !== selectedFilterCategory) {
+          return;
+        }
+
+        const isFav = favorites.includes(key);
+
+        const item = document.createElement('div');
+        item.className = "bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300 flex flex-col";
+        item.innerHTML = `
+          <div class="relative h-32 w-full bg-slate-100">
+            <img src="${aroma.imageUrl}" alt="${aroma.name}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+            <div class="absolute bottom-3 left-4 text-white">
+              <span class="text-[10px] font-bold uppercase tracking-widest opacity-80">${aroma.english}</span>
+              <h4 class="text-lg font-black leading-none mt-0.5">${aroma.emoji} ${aroma.name}</h4>
+            </div>
+            <button
+              onclick="toggleFavorite('${key}')"
+              class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-white/95 text-slate-400 hover:text-rose-500 shadow transition-all ${
+                isFav ? 'text-rose-500 bg-rose-50' : ''
+              }"
+            >
+              ❤️
+            </button>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex justify-between items-center text-[11px]">
+              <span class="bg-emerald-50 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold border border-emerald-100">
+                ${aroma.category}
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed font-medium">${aroma.desc}</p>
+            <div class="flex flex-wrap gap-1 pt-1">
+              ${aroma.properties.map(p => `<span class="bg-slate-100 text-slate-600 text-[9px] px-2 py-0.5 rounded font-semibold"># ${p}</span>`).join('')}
+            </div>
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+    };
+
+    // --- お気に入り画面（Tab 3）の描画 ---
+    const renderFavorites = () => {
+      const container = document.getElementById('favorites-list');
+      container.innerHTML = '';
+
+      if (favorites.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 px-4 space-y-3">
+            <div class="text-5xl">💚</div>
+            <p class="text-sm font-bold text-slate-400">お気に入りのアロマはまだありません</p>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+              対話診断結果やアロマ図鑑から、お気に入りの❤️をタップすると、ここにあなた好みの香りが保存されます。
+            </p>
+            <button
+              onclick="switchTab('diagnose')"
+              class="mt-4 px-5 py-2.5 bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-md hover:bg-emerald-950 transition"
+            >
+              さっそく診断してみる
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      favorites.forEach(key => {
+        const aroma = AROMA_DATA[key];
+        if (!aroma) return;
+
+        const item = document.createElement('div');
+        item.className = "bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300 flex flex-col";
+        item.innerHTML = `
+          <div class="relative h-32 w-full bg-slate-100">
+            <img src="${aroma.imageUrl}" alt="${aroma.name}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+            <div class="absolute bottom-3 left-4 text-white">
+              <span class="text-[10px] font-bold uppercase tracking-widest opacity-80">${aroma.english}</span>
+              <h4 class="text-lg font-black leading-none mt-0.5">${aroma.emoji} ${aroma.name}</h4>
+            </div>
+            <button
+              onclick="toggleFavorite('${key}')"
+              class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-rose-500 text-white shadow transition-all hover:scale-105"
+            >
+              ❤️
+            </button>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex justify-between items-center text-[11px]">
+              <span class="bg-emerald-50 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold border border-emerald-100">
+                ${aroma.category}
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed font-medium">${aroma.desc}</p>
+            <div class="flex flex-wrap gap-1 pt-1">
+              ${aroma.properties.map(p => `<span class="bg-slate-100 text-slate-600 text-[9px] px-2 py-0.5 rounded font-semibold"># ${p}</span>`).join('')}
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    };
+
+    // お気に入りトグル処理
+    const toggleFavorite = (aromaId) => {
+      const idx = favorites.indexOf(aromaId);
+      if (idx > -1) {
+        favorites.splice(idx, 1);
+      } else {
+        favorites.push(aromaId);
+      }
+
+      localStorage.setItem('botanical_companion_favs', JSON.stringify(favorites));
+      updateFavoriteBadge();
+
+      if (activeTab === 'library') {
+        renderLibrary();
+      } else if (activeTab === 'favorites') {
+        renderFavorites();
+      } else if (activeTab === 'diagnose') {
+        renderChat();
+      }
+    };
+
+    // お気に入りバッジ更新
+    const updateFavoriteBadge = () => {
+      const badge = document.getElementById('fav-badge');
+      if (favorites.length > 0) {
+        badge.textContent = favorites.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    };
+
+    // --- 【完全修正】外枠の画面スクロールを引き起こさないための内部制御ロジック ---
+    const scrollToBottom = () => {
+      const container = document.getElementById('chat-scroll-container');
+      if (!container) return;
+
+      // scrollIntoView を使うと、iframe を貫通してメインブラウザ画面全体がスクロールしてしまうバグが発生します。
+      // これを防ぐため、スクロール可能領域を検知し、コンテナ要素自体の scrollTop のみを滑らかに操作します。
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+
+      // メッセージの総高が表示領域（コンテナの高さ）を超えている場合のみスクロールする
+      if (scrollHeight > clientHeight) {
+        container.scrollTo({
+          top: scrollHeight - clientHeight,
+          behavior: 'smooth'
+        });
+      }
+    };
+  </script>
+</body>
+</html>
