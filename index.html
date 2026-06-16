@@ -663,282 +663,177 @@ const DIAGNOSE_STEPS = {
       });
     };
 
-    // --- 操作パネル（選択肢・入力フィールドなど）の描画 ---
-    const renderActionPanel = () => {
-      const panel = document.getElementById('action-panel');
-      panel.innerHTML = '';
+// --- 操作パネル（選択肢・入力フィールドなど）の描画 ---
+const renderActionPanel = () => {
+  const panel = document.getElementById('action-panel');
+  panel.innerHTML = '';
 
-      if (isTyping) return;
+  if (isTyping) return;
 
-      // 【ステップ1: 主訴の選択】
-      if (currentStepNum === 1) {
-        const wrapper = document.createElement('div');
-        wrapper.className = "space-y-2 animate-slide-up";
+  if (currentStepNum === 1) {
+    const wrapper = document.createElement('div');
+    wrapper.className = "space-y-2 animate-slide-up";
 
-        const btnGrid = document.createElement('div');
-        btnGrid.className = "grid grid-cols-1 gap-2";
+    const btnGrid = document.createElement('div');
+    btnGrid.className = "grid grid-cols-1 gap-2";
 
-        const step1 = DIAGNOSE_STEPS.step1;
-        step1.choices.forEach(ch => {
-          const btn = document.createElement('button');
-          btn.className = "text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-semibold text-xs transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
-          btn.onclick = () => selectStep1(ch.id, ch.label, ch.reply);
-          btn.innerHTML = `
-            <span>${ch.label}</span>
-            <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
-          `;
-          btnGrid.appendChild(btn);
-        });
-        wrapper.appendChild(btnGrid);
+    const step1 = DIAGNOSE_STEPS.step1;
+    step1.choices.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = "text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-semibold text-xs transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
+      btn.onclick = () => selectStep1(ch.id, ch.label, ch.reply);
+      btn.innerHTML = `
+        <span>${ch.label}</span>
+        <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
+      `;
+      btnGrid.appendChild(btn);
+    });
 
-        // その他（自由相談フォームへ）
-        const freeBtn = document.createElement('button');
-        freeBtn.className = "w-full p-3 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/30 hover:bg-emerald-50/80 text-emerald-800 hover:text-emerald-950 font-bold text-xs transition active:scale-[0.98] shadow-sm flex items-center justify-center gap-1.5";
-        freeBtn.onclick = () => openFreeInput();
-        freeBtn.innerHTML = `<span>✍️ その他：言葉でアシスタントに直接相談する</span>`;
-        wrapper.appendChild(freeBtn);
+    wrapper.appendChild(btnGrid);
+    panel.appendChild(wrapper);
+  }
 
-        panel.appendChild(wrapper);
-      }
+  else if (currentStepNum === 2) {
+    const step2Group = DIAGNOSE_STEPS.step2_data[step1SelectedId];
+    if (!step2Group) return;
 
-      // 【自由記述フォーム表示】
-      else if (currentStepNum === 'free_input') {
-        const wrapper = document.createElement('div');
-        wrapper.className = "bg-white p-4 rounded-xl border border-emerald-100 shadow-md space-y-3 animate-slide-up";
-        wrapper.innerHTML = `
-          <div class="flex justify-between items-center">
-            <span class="text-xs text-slate-500 font-bold">📋 自由に入力して相談する</span>
-            <button onclick="cancelFreeInput()" class="text-xs text-rose-500 hover:text-rose-700 font-semibold">やめる</button>
-          </div>
-          <textarea
-            id="free-textarea"
-            placeholder="例：最近、仕事のプレッシャーがすごくて焦ってしまい、夜ベッドに入ってからも頭がぐるぐるして全く眠りにつけません。"
-            class="w-full p-3 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none h-24 text-slate-700 leading-relaxed"
-          ></textarea>
-          <button
-            onclick="submitFreeText()"
-            class="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2.5 rounded-lg text-xs font-bold transition shadow-md active:scale-95"
-          >
-            相談を送信する
-          </button>
-        `;
-        panel.appendChild(wrapper);
-      }
+    const wrapper = document.createElement('div');
+    wrapper.className = "space-y-2 animate-slide-up";
 
-      // 【ステップ2: 原因の深掘り】
-      else if (currentStepNum === 2) {
-        const step2Group = DIAGNOSE_STEPS.step2_data[step1SelectedId];
-        if (!step2Group) return;
+    const btnGrid = document.createElement('div');
+    btnGrid.className = "grid grid-cols-1 gap-2";
 
-        const wrapper = document.createElement('div');
-        wrapper.className = "space-y-2 animate-slide-up";
+    step2Group.choices.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = "text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-medium text-xs leading-relaxed transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
+      btn.onclick = () => selectStep2(ch.aroma, ch.label, ch.reply);
+      btn.innerHTML = `
+        <span>${ch.label}</span>
+        <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
+      `;
+      btnGrid.appendChild(btn);
+    });
 
-        const btnGrid = document.createElement('div');
-        btnGrid.className = "grid grid-cols-1 gap-2";
+    wrapper.appendChild(btnGrid);
 
-        step2Group.choices.forEach(ch => {
-          const btn = document.createElement('button');
-          btn.className = "text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-medium text-xs leading-relaxed transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
-          btn.onclick = () => selectStep2(ch.aroma, ch.label, ch.reply);
-          btn.innerHTML = `
-            <span>${ch.label}</span>
-            <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
-          `;
-          btnGrid.appendChild(btn);
-        });
-        wrapper.appendChild(btnGrid);
+    const backBtn = document.createElement('button');
+    backBtn.className = "w-full text-center py-2 text-slate-400 hover:text-slate-600 font-semibold text-xs";
+    backBtn.onclick = () => initChat();
+    backBtn.textContent = "⬅️ 最初に戻る";
+    wrapper.appendChild(backBtn);
 
-        // 戻るボタン
-        const backBtn = document.createElement('button');
-        backBtn.className = "w-full text-center py-2 text-slate-400 hover:text-slate-600 font-semibold text-xs";
-        backBtn.onclick = () => initChat();
-        backBtn.textContent = "⬅️ 最初に戻る";
-        wrapper.appendChild(backBtn);
+    panel.appendChild(wrapper);
+  }
 
-        panel.appendChild(wrapper);
-      }
+  else if (currentStepNum === 3) {
+    const step3 = DIAGNOSE_STEPS.step3;
 
-      // 【ステップ3: 理想の状態】
-      else if (currentStepNum === 3) {
-        const step3 = DIAGNOSE_STEPS.step3;
+    const wrapper = document.createElement('div');
+    wrapper.className = "space-y-2 animate-slide-up";
 
-        const wrapper = document.createElement('div');
-        wrapper.className = "space-y-2 animate-slide-up";
+    const btnGrid = document.createElement('div');
+    btnGrid.className = "grid grid-cols-1 gap-2";
 
-        const btnGrid = document.createElement('div');
-        btnGrid.className = "grid grid-cols-1 gap-2";
+    step3.choices.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = "text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-bold text-xs transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
+      btn.onclick = () => selectStep3(ch.id, ch.label);
+      btn.innerHTML = `
+        <span>${ch.label}</span>
+        <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
+      `;
+      btnGrid.appendChild(btn);
+    });
 
-        step3.choices.forEach(ch => {
-          const btn = document.createElement('button');
-          btn.className = "text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-600 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-950 font-bold text-xs transition active:scale-[0.98] shadow-sm flex items-center justify-between group";
-          btn.onclick = () => selectStep3(ch.id, ch.label);
-          btn.innerHTML = `
-            <span>${ch.label}</span>
-            <span class="text-[10px] text-slate-300 group-hover:text-emerald-600 transition">➜</span>
-          `;
-          btnGrid.appendChild(btn);
-        });
-        wrapper.appendChild(btnGrid);
+    wrapper.appendChild(btnGrid);
+    panel.appendChild(wrapper);
+  }
 
-        panel.appendChild(wrapper);
-      }
+  else if (currentStepNum === 4) {
+    panel.innerHTML = '';
+  }
 
-      // 【ステップ4: 診断結果表示済み】
-      else if (currentStepNum === 4) {
-        panel.innerHTML = '';
-      }
+  scrollToBottom();
+};
 
-      // 操作パネル描画後にスクロール位置を調整
-      scrollToBottom();
-    };
+// --- 各選択アクション ---
 
-    // --- 各選択アクション ---
+const selectStep1 = (chId, label, replyText) => {
+  chatHistory.push({ type: 'user', text: label });
+  step1SelectedId = chId;
+  currentStepNum = 2;
+  renderChat();
+  renderActionPanel();
 
-    // ステップ1：主訴
-    const selectStep1 = (chId, label, replyText) => {
-      chatHistory.push({ type: 'user', text: label });
-      step1SelectedId = chId;
-      currentStepNum = 2;
-      renderChat();
-      renderActionPanel();
+  isTyping = true;
+  renderChat();
+  setTimeout(() => {
+    isTyping = false;
+    chatHistory.push({
+      type: 'bot',
+      speaker: 'アロマアシスタント',
+      text: replyText + `\n\n` + DIAGNOSE_STEPS.step2_data[chId].text
+    });
+    renderChat();
+    renderActionPanel();
+  }, 1000);
+};
 
-      isTyping = true;
-      renderChat();
-      setTimeout(() => {
-        isTyping = false;
-        chatHistory.push({
-          type: 'bot',
-          speaker: 'アロマアシスタント',
-          text: replyText + `\n\n` + DIAGNOSE_STEPS.step2_data[chId].text
-        });
-        renderChat();
-        renderActionPanel();
-      }, 1000);
-    };
+const selectStep2 = (aromaId, label, replyText) => {
+  chatHistory.push({ type: 'user', text: label });
+  provisionalAroma = aromaId;
+  currentStepNum = 3;
+  renderChat();
+  renderActionPanel();
 
-    // 自由記述開始
-    const openFreeInput = () => {
-      currentStepNum = 'free_input';
-      renderActionPanel();
-    };
+  isTyping = true;
+  renderChat();
+  setTimeout(() => {
+    isTyping = false;
+    chatHistory.push({
+      type: 'bot',
+      speaker: 'アロマアシスタント',
+      text: replyText
+    });
+    chatHistory.push({
+      type: 'bot',
+      speaker: 'アロマアシスタント',
+      text: DIAGNOSE_STEPS.step3.text
+    });
+    renderChat();
+    renderActionPanel();
+  }, 1000);
+};
 
-    // 自由記述キャンセル
-    const cancelFreeInput = () => {
-      currentStepNum = 1;
-      renderActionPanel();
-    };
+const selectStep3 = (idealId, label) => {
+  chatHistory.push({ type: 'user', text: label });
+  step3SelectedIdeal = idealId;
+  currentStepNum = 4;
+  renderChat();
+  renderActionPanel();
 
-    // 自由記述送信
-    const submitFreeText = () => {
-      const textarea = document.getElementById('free-textarea');
-      const text = textarea ? textarea.value.trim() : '';
-      if (!text) return;
+  isTyping = true;
+  renderChat();
+  setTimeout(() => {
+    isTyping = false;
 
-      chatHistory.push({ type: 'user', text: text });
-      
-      let matchedAroma = 'lavender';
-      const textLower = text.toLowerCase();
+    const finalAromaId = DECISION_MATRIX[provisionalAroma]?.[idealId] || provisionalAroma;
+    const aroma = AROMA_DATA[finalAromaId];
 
-      if (textLower.includes('ストレス') || textLower.includes('人間関係') || textLower.includes('疲れた') || textLower.includes('sns') || textLower.includes('もやもや')) {
-        matchedAroma = 'bergamot';
-      }
-      if (textLower.includes('眠れ') || textLower.includes('寝') || textLower.includes('起き') || textLower.includes('夜')) {
-        matchedAroma = 'lavender';
-      }
-      if (textLower.includes('仕事') || textLower.includes('集中') || textLower.includes('眠気') || textLower.includes('パソコン')) {
-        matchedAroma = 'peppermint';
-      }
-      if (textLower.includes('頭') || textLower.includes('のど') || textLower.includes('エアコン') || textLower.includes('乾燥')) {
-        matchedAroma = 'eucalyptus';
-      }
-      if (textLower.includes('身体') || textLower.includes('筋肉') || textLower.includes('疲れ') || textLower.includes('重い')) {
-        matchedAroma = 'lemongrass';
-      }
-      if (textLower.includes('女性') || textLower.includes('不安定') || textLower.includes('情緒') || textLower.includes('生理')) {
-        matchedAroma = 'clarysage';
-      }
+    chatHistory.push({
+      type: 'bot',
+      speaker: 'アロマアシスタント',
+      text: `診断が完了しました。\n\n今のあなたにおすすめの香りは「${aroma.name}」です。`
+    });
 
-      provisionalAroma = matchedAroma;
-      currentStepNum = 3;
-      renderChat();
-      renderActionPanel();
+    renderChat();
+    renderActionPanel();
+  }, 1200);
+};
 
-      isTyping = true;
-      renderChat();
-      setTimeout(() => {
-        isTyping = false;
-        chatHistory.push({
-          type: 'bot',
-          speaker: 'アロマアシスタント',
-          text: `お話を聞かせていただき、ありがとうございます。あなたのお悩みにそっと寄り添えるよう、心の琴線に触れる香りを調香いたします。\n\n最後に、理想のイメージを教えてください。`
-        });
-        chatHistory.push({
-          type: 'bot',
-          speaker: 'アロマアシスタント',
-          text: DIAGNOSE_STEPS.step3.text
-        });
-        renderChat();
-        renderActionPanel();
-      }, 1200);
-    };
-
-    // ステップ2：原因の選択
-    const selectStep2 = (aromaId, label, replyText) => {
-      chatHistory.push({ type: 'user', text: label });
-      provisionalAroma = aromaId;
-      currentStepNum = 3;
-      renderChat();
-      renderActionPanel();
-
-      isTyping = true;
-      renderChat();
-      setTimeout(() => {
-        isTyping = false;
-        chatHistory.push({
-          type: 'bot',
-          speaker: 'アロマアシスタント',
-          text: replyText
-        });
-        chatHistory.push({
-          type: 'bot',
-          speaker: 'アロマアシスタント',
-          text: DIAGNOSE_STEPS.step3.text
-        });
-        renderChat();
-        renderActionPanel();
-      }, 1000);
-    };
-
-    // ステップ3：理想の状態の選択（これで確定）
-    const selectStep3 = (idealId, label) => {
-      chatHistory.push({ type: 'user', text: label });
-      step3SelectedIdeal = idealId;
-      currentStepNum = 4;
-      renderChat();
-      renderActionPanel();
-
-      isTyping = true;
-      renderChat();
-      setTimeout(() => {
-        isTyping = false;
-        
-        const finalAromaId = DECISION_MATRIX[provisionalAroma]?.[idealId] || provisionalAroma;
-        const aroma = AROMA_DATA[finalAromaId];
-
-        chatHistory.push({
-          type: 'bot',
-          speaker: 'アロマアシスタント',
-          text: `すべての想いを教えていただき、本当にありがとうございました。大変長らくお待たせいたしました。\n\n今のあなたに寄り添うアロマは、心の深呼吸を導く「${aroma.name}」です。あなたの歩みをそっと応援します。`
-        });
-        renderChat();
-        renderActionPanel();
-      }, 1200);
-    };
-
-    // リセット
-    const resetDiagnosis = () => {
-      initChat();
-    };
+const resetDiagnosis = () => {
+  initChat();
+};
 
     // --- アロマ図鑑（Tab 2）の描画 ---
     const renderLibrary = () => {
